@@ -1,0 +1,44 @@
+version: "3"
+services:
+    deepstream:
+        image: deepstreamio/deepstream.io
+        container_name: deepstream
+        ports:
+            - "6020:6020"
+            - "6021:6021"
+        volumes:
+            - ./conf:/etc/deepstream
+        depends_on:
+            - redis
+            - rethinkdb
+    deepstream-search-provider:
+        image: deepstreamio/provider-search-rethinkdb
+        container_name: deepstream-search-provider
+        environment:
+            - DEEPSTREAM_HOST=deepstream
+            - DEEPSTREAM_PORT=6020
+            - RETHINKDB_HOST=rethinkdb
+        depends_on:
+            - deepstream
+    redis:
+        image: redis:alpine
+        container_name: redis
+        ports:
+            - "6379:6379"
+    rethinkdb:
+        image: rethinkdb
+        container_name: rethinkdb
+        ports:
+            - "28015:28015"
+            - "8080:8080"
+        volumes:
+            - ./data/rethinkdb:/data/rethinkdb_data
+    vue:
+        build: .
+        container_name: vue
+        volumes:
+            - .:/app
+        ports:
+            - '9000:8080'
+        depends_on:
+            - deepstream
